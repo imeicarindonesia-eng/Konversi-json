@@ -1,0 +1,88 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel ke JSON - Data Kendaraan</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { max-width: 800px; margin: 0 auto; padding: 20px; background: #f5f7fa; }
+        h2 { text-align: center; color: #2c3e50; }
+        .box { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input[type="file"] { width: 100%; padding: 12px; border: 2px dashed #3498db; border-radius: 8px; background: #f8f9fa; }
+        button { background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 15px; }
+        button:hover { background: #219653; }
+        textarea { width: 100%; height: 200px; margin-top: 15px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 12px; }
+        .info { background: #e8f4fc; border-left: 4px solid #3498db; padding: 12px; margin-top: 15px; border-radius: 4px; }
+        .success { color: #27ae60; font-weight: bold; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <h2>🚗 Konversi Excel (.xlsx) ke JSON</h2>
+
+    <div class="box">
+        <h3>📂 Langkah 1: Pilih File Excel</h3>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+        <div class="info">
+            <strong>Penting:</strong> Pastikan nama kolom di Excel persis seperti ini:<br>
+            <code>plat_nomor, nama_pemilik, no_ktp, email, no_hp, pekerjaan, alamat, merk, tipe, tahun, isi_silinder, warna_kendaraan, warna_tnkb, bbm, no_rangka, no_mesin, no_bpkb, no_stnk, no_faktur, tanggal_faktur, tanggal_stnk, tanggal_daftar, apm</code>
+        </div>
+        <button onclick="convertFile()">🔄 Konversi ke JSON</button>
+        <div class="success" id="successMsg">✅ Berhasil! Silakan salin hasil di bawah</div>
+    </div>
+
+    <div class="box">
+        <h3>📋 Hasil JSON</h3>
+        <textarea id="output" readonly placeholder="Hasil akan muncul di sini..."></textarea>
+        <button onclick="copyText()" style="background: #3498db;">📋 Salin ke Papan Klip</button>
+        <button onclick="downloadFile()" style="background: #9b59b6;">💾 Simpan sebagai data_kendaraan.json</button>
+    </div>
+
+<script>
+let jsonResult = '';
+
+function convertFile() {
+    const fileInput = document.getElementById('fileInput');
+    if (!fileInput.files.length) { alert('Pilih file dulu bos!'); return; }
+    
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        jsonResult = JSON.stringify(jsonData, null, 2);
+        document.getElementById('output').value = jsonResult;
+        document.getElementById('successMsg').style.display = 'block';
+    };
+    
+    reader.readAsArrayBuffer(file);
+}
+
+function copyText() {
+    const output = document.getElementById('output');
+    output.select();
+    document.execCommand('copy');
+    alert('✅ Tersalin bos! Silakan tempel ke GitHub');
+}
+
+function downloadFile() {
+    if (!jsonResult) { alert('Belum ada data bos! Pilih file dulu'); return; }
+    const blob = new Blob([jsonResult], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data_kendaraan.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
